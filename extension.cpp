@@ -28,9 +28,9 @@
  *
  * Version: $Id$
  */
-#include <iostream>
 
 #include "extension.h"
+ 
 #include "CDetour/detours.h"
 #include <iclient.h>
 #include <iserver.h>
@@ -40,8 +40,6 @@
 
 #define GAMECONFIG_FILE "voicehook"
 
-using namespace std;
-
 VoiceHook g_VoiceHook;
 
 SMEXT_LINK(&g_VoiceHook);
@@ -50,7 +48,6 @@ IGameConfig *g_pGameConf = nullptr;
 CDetour *g_pSV_BroadcastVoiceDataDetor = nullptr;
 IForward *g_pVoiceToClientForward = nullptr;
 IServer *g_pIServer = nullptr;
-ICvar *g_pICvar = nullptr;
 ConVar *g_pVoiceEnable = nullptr;
 
 DETOUR_DECL_STATIC3(SV_BroadcastVoiceData, void, IClient *, cl, int, nBytes, char *, data) {
@@ -68,12 +65,7 @@ DETOUR_DECL_STATIC3(SV_BroadcastVoiceData, void, IClient *, cl, int, nBytes, cha
 	for (int i = 0; i < g_pIServer->GetClientCount(); i++) {
 		IClient *pDestClient = g_pIServer->GetClient(i);
 		
-		if (!pDestClient->IsActive()) continue;
-		
-		bool bSelf = (pDestClient == cl);
-		bool bHearsPlayer = pDestClient->IsHearingClient(voiceData.m_nFromClient);
-		
-		if (!bHearsPlayer || bSelf) continue;
+		if (!pDestClient->IsActive() || pDestClient == cl || !pDestClient->IsHearingClient(voiceData.m_nFromClient)) continue;
 		
 		//FORWARD
 		g_pVoiceToClientForward->PushCell(iClient+1);
@@ -92,12 +84,12 @@ DETOUR_DECL_STATIC3(SV_BroadcastVoiceData, void, IClient *, cl, int, nBytes, cha
 		
 		pDestClient->SendNetMsg(voiceData);
 	}
-	//DETOUR_MEMBER_CALL(SV_BroadcastVoiceData)(cl, nBytes, data);
 }
 
 bool VoiceHook::SDK_OnLoad(char *error, size_t maxlength, bool late) {
 	if (!gameconfs->LoadGameConfigFile(GAMECONFIG_FILE, &g_pGameConf, error, maxlength)) {
-		cout << "err load gameconfig file" << endl;
+		g_pSM->Format(error, maxlength, "Failed to load gameconfig: %s", GAMECONFIG_FILE);
+		
 		return false;
 	}
 
@@ -105,7 +97,8 @@ bool VoiceHook::SDK_OnLoad(char *error, size_t maxlength, bool late) {
 	
 	void *pAddr = nullptr;
 	if (!g_pGameConf->GetMemSig("sv", &pAddr) || !pAddr) {
-		cout << "error offset of sv" << endl;
+		g_pSM->Format(error, maxlength, "Failed get offset of sv variable");
+
 		return false;
 	}
 	
@@ -115,14 +108,14 @@ bool VoiceHook::SDK_OnLoad(char *error, size_t maxlength, bool late) {
 	Sys_LoadInterface("engine", VENGINE_CVAR_INTERFACE_VERSION, nullptr, (void**)&cvar);
 	
 	if (!cvar) {
-		cout << "cvar nullptr(" << endl;
+		g_pSM->Format(error, maxlength, "ICVAR not found (%s)", VENGINE_CVAR_INTERFACE_VERSION);
 		
 		return false;
 	}
 	
 	g_pVoiceEnable = cvar->FindVar("sv_voiceenable");
 	if (!g_pVoiceEnable) {
-		cout << "err findvar sv_voiceenable" << endl;
+		g_pSM->Format(error, maxlength, "Failed to find cvar: sv_voiceenable");
 		
 		return false;
 	}
