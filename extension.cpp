@@ -77,7 +77,7 @@ DETOUR_DECL_STATIC3(SV_BroadcastVoiceData, void, IClient *, cl, int, nBytes, cha
 		cell_t result = Pl_Continue;
 		g_pVoiceToClientForward->Execute(&result);
 
-		if( result >= Pl_Handled || (!bResult && result == Pl_Changed) ) return;
+		if( result >= Pl_Handled || (!bResult && result == Pl_Changed) ) continue;
 		//END FORWARD
 		
 		voiceData.m_nLength = iBytes;
