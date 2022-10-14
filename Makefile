@@ -5,7 +5,7 @@
 ### EDIT THESE PATHS FOR YOUR OWN SETUP ###
 ###########################################
 
-SMSDK = /home/src_sdk/sourcemod/1.10
+SMSDK = /home/src_sdk/sourcemod/1.6
 HL2SDK_ORIG = /home/src_sdk/hl2sdk-episode1
 #HL2SDK_OB = /home/src_sdk/hl2sdk-ob
 HL2SDK_OB_VALVE = /home/src_sdk/hl2sdk-ob-valve
