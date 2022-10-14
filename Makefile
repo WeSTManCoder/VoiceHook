@@ -259,8 +259,5 @@ debug:
 default: all
 
 clean: check
-	rm -rf $(BIN_DIR)/*.o
-	rm -rf $(BIN_DIR)/sdk/*.o
-	rm -rf $(BIN_DIR)/CDetour/*.o
-	rm -rf $(BIN_DIR)/$(BINARY)
+	rm -rf $(BIN_DIR)
 
