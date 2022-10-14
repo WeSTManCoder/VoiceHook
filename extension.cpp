@@ -65,7 +65,7 @@ DETOUR_DECL_STATIC3(SV_BroadcastVoiceData, void, IClient *, cl, int, nBytes, cha
 	for (int i = 0; i < g_pIServer->GetClientCount(); i++) {
 		IClient *pDestClient = g_pIServer->GetClient(i);
 		
-		if (!pDestClient->IsActive() || pDestClient == cl || !pDestClient->IsHearingClient(voiceData.m_nFromClient)) continue;
+		if (pDestClient == cl || !pDestClient->IsActive() || !pDestClient->IsHearingClient(iClient)) continue;
 		
 		//FORWARD
 		g_pVoiceToClientForward->PushCell(iClient+1);
@@ -77,8 +77,8 @@ DETOUR_DECL_STATIC3(SV_BroadcastVoiceData, void, IClient *, cl, int, nBytes, cha
 		cell_t result = Pl_Continue;
 		g_pVoiceToClientForward->Execute(&result);
 
-		if( result >= Pl_Handled || (!bResult && result == Pl_Changed) ) continue;
-		//END FORWARD
+		if (result >= Pl_Handled) return;
+		if (!bResult && result == Pl_Changed) continue;
 		
 		voiceData.m_nLength = iBytes;
 		
